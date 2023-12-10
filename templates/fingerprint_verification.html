@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fingerprint Verification</title>
+</head>
+<body>
+    <h1>Fingerprint Verification</h1>
+
+    <div>
+        <span id="message"></span>
+        <div id="userInfo"></div>
+    </div>
+
+    <button onclick="verify()">Verify</button>
+
+    <script>
+        function performOperation(endpoint, operation, callback) {
+            fetch(endpoint, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    callback(data);
+                })
+                .catch(error => {
+                    console.error(`${operation} error:`, error);
+                    document.getElementById('message').innerText = `${operation} failed.`;
+                });
+        }
+
+        function verify() {
+            performOperation('/verify', 'Verification', function(data) {
+                if (data.status === 'Verification successful') {
+                    document.getElementById('message').innerText = data.status;
+                    document.getElementById('userInfo').innerText = `
+                        User ID: ${data.user_id}
+                        Name: ${data.name}
+                        Year: ${data.year}
+                        Department: ${data.department}
+                        School: ${data.school}
+                    `;
+                } else {
+                    document.getElementById('message').innerText = data.status;
+                    document.getElementById('userInfo').innerText = '';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

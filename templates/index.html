@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fingerprint Control</title>
+    <style>
+        #fingerprintImage {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fingerprint Control</h1>
+
+    <div>
+        <div id="fingerprintImage"></div>
+        <span id="message"></span>
+    </div>
+
+    <button onclick="enroll()">Enroll</button>
+    <button onclick="verify()">Verify</button>
+    <button onclick="deleteUser()">Delete</button>
+
+    <script>
+        function performOperation(endpoint, operation) {
+            fetch(endpoint, { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`${operation} failed.`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(`${operation} success:`, data);
+                    document.getElementById('fingerprintImage').innerHTML = '<img src="/static/images/fingerprint.png" alt="Fingerprint Image" style="width: 100px; height: 100px;" />';
+                    document.getElementById('message').innerText = data.status;
+
+                    if (operation === 'Verification' && data.user_info) {
+                        // Display user information for verification
+                        alert(JSON.stringify(data.user_info));
+                    }
+                })
+                .catch(error => {
+                    console.error(`${operation} error:`, error);
+                    document.getElementById('message').innerText = `${operation} failed.`;
+                });
+        }
+
+        function enroll() {
+            const userId = prompt("Please type in the ID # (from 1 to 127) you want to save this finger as:");
+    
+            if (userId !== null && userId.trim() !== "") {
+                // Ensure that the user provided a non-empty user ID
+                fetch(`/enroll?id=${userId}`, { method: 'POST' })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Enrollment failed.');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Enrollment success:', data);
+                        document.getElementById('message').innerText = data.status;
+                    })
+                    .catch(error => {
+                        console.error('Enrollment error:', error);
+                        document.getElementById('message').innerText = 'Enrollment failed.';
+                    });
+            } else {
+                // Handle the case where the user did not provide a valid user ID
+                alert("Please provide a valid user ID.");
+            }
+        }
+
+        function verify() {
+            performOperation('/verify', 'Verification');
+        }
+
+        function deleteUser() {
+            const userId = prompt("Please type in the ID # of the user you want to delete:");
+
+            if (userId !== null) {
+                performOperation(`/delete?id=${userId}`, 'Deletion');
+            }
+        }
+    </script>
+</body>
+</html>
